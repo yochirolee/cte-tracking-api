@@ -2,7 +2,7 @@
 	"name": "tracking-ctenvios-1.0.0",
 	"version": "1.0.0",
 	"description": "Tracking System",
-	"main": "index.js",
+	"main": "server.js",
 	"author": "Yochiro Lee Cruz",
 	"license": "MIT",
 	"keywords": [],
