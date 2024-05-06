@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Parcels {
+  hbl             String         @id @unique
+  invoiceId       Int
+  containerId     Int
+  description     String
+  weight          Float
+  currentLocation Int
+  status          ParcelStatuses @relation(fields: [statusId], references: [id])
+  statusId        Int
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  location        Locations      @relation(fields: [currentLocation], references: [id])
+  events          ParcelEvents[]
+  details         ParcelDetails  @relation(fields: [detailId], references: [id])
+  detailId        Int
+}
+
+model ParcelDetails {
+  id              Int          @id @default(autoincrement())
+  sender          String
+  receiver        String
+  shippingAddress String
+  province        Provinces    @relation(fields: [provinceId], references: [id])
+  provinceId      Int
+  city            String
+  carrier         Carriers     @relation(fields: [carrierId], references: [id])
+  carrierId       Int
+  carrierType     CarrierTypes @relation(fields: [carrierTypeId], references: [id])
+  carrierTypeId   Int
+  Parcels         Parcels[]
+}
+
+model ParcelEvents {
+  id         Int        @id @default(autoincrement())
+  hbloc      String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  parcel     Parcels    @relation(fields: [hbl], references: [hbl], onDelete: Cascade, onUpdate: Cascade)
+  hbl        String
+  location   Locations? @relation(fields: [locationId], references: [id])
+  locationId Int?
+}
+
+model ParcelStatuses {
+  id        Int       @id @default(autoincrement())
+  status    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Parcels   Parcels[]
+}
+
+model Locations {
+  id        Int            @id @default(autoincrement())
+  name      String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  parcels   Parcels[]
+  events    ParcelEvents[]
+}
+
+model Carriers {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ParcelDetails ParcelDetails[]
+}
+
+model CarrierTypes {
+  id        Int      @id @default(autoincrement())
+  type      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ParcelDetails ParcelDetails[]
+}
+
+model Provinces {
+  id            Int             @id @default(autoincrement())
+  name          String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  ParcelDetails ParcelDetails[]
+}

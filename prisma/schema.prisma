@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Parcels {
+  hbl             String         @id @unique
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  status          Status        @relation(fields: [statusId], references: [id])
+  statusId        Int @default(1)
+  location        Locations      @relation(fields: [currentLocationId], references: [id])
+  currentLocationId Int
+  events          Events[]
+  @@index([hbl,currentLocationId])
+ 
+}
+
+model Events {
+  id         Int @id @default(autoincrement())
+  hbloc       String @unique
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  parcel      Parcels     @relation(fields: [hbl], references: [hbl], onDelete: Cascade, onUpdate: Cascade)
+  hbl  String
+  locations   Locations? @relation(fields: [locationId], references: [id])
+  locationId Int?
+  
+}
+
+model Status {
+  id        Int      @id @default(autoincrement())
+  status    String
+  description String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  parcels   Parcels[]
+}
+
+model Locations {
+  id        Int            @id @default(autoincrement())
+  name  String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  parcels   Parcels[]
+  events    Events[]
+}

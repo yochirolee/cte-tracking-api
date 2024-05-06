@@ -1,0 +1,65 @@
+Arguments: 
+  C:\Program Files\nodejs\node.exe C:\Users\yosho\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js init
+
+PATH: 
+  C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\PuTTY\;C:\Program Files (x86)\Microsoft SQL Server\150\DTS\Binn\;C:\Program Files\nodejs\;C:\Users\yosho\AppData\Local\Microsoft\WindowsApps;C:\Users\yosho\AppData\Local\Programs\Microsoft VS Code\bin;C:\Program Files\Azure Data Studio\bin;C:\Users\yosho\AppData\Roaming\npm;C:\Users\yosho\AppData\Local\GitHubDesktop\bin;C:\Users\yosho\.bun\bin
+
+Yarn version: 
+  1.22.19
+
+Node version: 
+  20.9.0
+
+Platform: 
+  win32 x64
+
+Trace: 
+  Error: canceled
+      at Interface.<anonymous> (C:\Users\yosho\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:137150:13)
+      at Interface.emit (node:events:514:28)
+      at [_ttyWrite] [as _ttyWrite] (node:internal/readline/interface:1125:18)
+      at ReadStream.onkeypress (node:internal/readline/interface:264:20)
+      at ReadStream.emit (node:events:514:28)
+      at emitKeys (node:internal/readline/utils:371:14)
+      at emitKeys.next (<anonymous>)
+      at ReadStream.onData (node:internal/readline/emitKeypressEvents:64:36)
+      at ReadStream.emit (node:events:514:28)
+      at addChunk (node:internal/streams/readable:376:12)
+
+npm manifest: 
+  {
+  	"name": "tracking-ctenvios-1.0.0",
+  	"version": "1.0.0",
+  	"description": "Tracking System",
+  	"main": "index.js",
+  	"author": "Yochiro Lee Cruz",
+  	"license": "MIT",
+  	"keywords": [],
+  	"dependencies": {
+  		"@prisma/client": "^5.10.2",
+  		"@supabase/supabase-js": "^2.39.1",
+  		"cloudinary": "^2.0.1",
+  		"cors": "^2.8.5",
+  		"dotenv": "^16.4.1",
+  		"express": "^4.16.2",
+  		"joi": "^17.12.1",
+  		"multer": "^1.4.5-lts.1",
+  		"mysql2": "^3.9.1",
+  		"nodemon": "^3.1.0",
+  		"read-excel-file": "^5.7.1",
+  		"save-dev": "^0.0.1-security",
+  		"sharp": "^0.33.2"
+  	},
+  	"devDependencies": {
+  		"prisma": "^5.10.2"
+  	},
+  	"prisma": {
+  		"seed": "node prisma/seed.js"
+  	}
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
