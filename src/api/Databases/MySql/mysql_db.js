@@ -81,10 +81,16 @@ const mysql_db = {
 		getByInvoices: async (array_of_invoices_id) => {
 			if (!array_of_invoices_id || array_of_invoices_id.length === 0) return [];
 			return await query(
-				"SELECT HBL as hbl,InvoiceId as invoiceId,ContainerId as containerId FROM `tracking` where InvoiceId IN (?);",
+				"SELECT HBL as hbl,InvoiceId as invoiceId FROM `parcels` where InvoiceId IN (?) ;",
 				[array_of_invoices_id],
 			);
 		},
+
+		getByHblArray: async (hbl_array) => {
+			if (!hbl_array || hbl_array.length === 0) return [];
+			return await query("SELECT HBL  FROM `parcels` where HBL IN (?) ;", [hbl_array]);
+		},
+
 		getByInvoiceId: async (invoiceId) => {
 			const packages = await query("select * from parcels where InvoiceId=?", [invoiceId]);
 			return packages;

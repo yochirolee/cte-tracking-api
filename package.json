@@ -2,12 +2,12 @@
 	"name": "tracking-ctenvios-1.0.0",
 	"version": "1.0.0",
 	"description": "Tracking System",
-	"main": "./src/server.js",
+	"main": "index.js",
 	"author": "Yochiro Lee Cruz",
 	"license": "MIT",
 	"keywords": [],
 	"scripts": {
-		"dev": "nodemon src/server.js"
+		"dev": "nodemon index.js"
 	},
 	"dependencies": {
 		"@prisma/client": "^5.10.2",

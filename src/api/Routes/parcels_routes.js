@@ -2,6 +2,7 @@ const prisma_db = require("../Databases/Prisma/prisma_db");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const parcels_controller = require("../Controllers/parcels_controller");
+const uploadExcel = require("../Middlewares/_uploadExcelMiddleware");
 
 const router = require("express").Router();
 
@@ -19,6 +20,9 @@ router.get("/container/:id", parcels_controller.getParcelsByContainerId);
 router.post("/toPort", parcels_controller.moveParcelsToPort);
 
 router.post("/changeLocation", parcels_controller.changeLocation);
+
+router.post("/excel/invoice", uploadExcel, parcels_controller.uploadExcelByInvoiceId);
+router.post("/excel/hbl", uploadExcel, parcels_controller.uploadExcelByHbl);
 
 router.get("/create", async (req, res) => {
 	const bulkWithDetails = await prisma.parcels.upsert({

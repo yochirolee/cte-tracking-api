@@ -1,9 +1,13 @@
+const e = require("express");
 const mysql_db = require("../Databases/MySql/mysql_db");
 const prisma_db = require("../Databases/Prisma/prisma_db");
 const supabase_db = require("../Databases/Supabase/supabase_db");
+const { excelSchemaByHBL } = require("../schemas/schemas");
 const createEvents = require("../utils/createEvents");
 const formatPackages = require("../utils/formatPackages");
 const { formatedJoin, formatSearchResult } = require("../utils/formatSearchResult");
+const createEventFromExcelDataRow = require("../utils/_createEventForExcelDataRow");
+const schemas = require("../schemas/schemas");
 
 const parcels_controller = {
 	getByHbl: async (req, res) => {
@@ -48,8 +52,7 @@ const parcels_controller = {
 		}
 		const packages = await mysql_db.container.getPackagesByContainerId(containerId);
 
-		if (!packages.length)
-			return res.status(404).json({ message: "No packages found for this container" });
+		if (!packages) return res.status(404).json({ message: "No packages found for this container" });
 
 		const hbl_list = packages.map((parcel) => parcel.hbl);
 
@@ -128,6 +131,145 @@ const parcels_controller = {
 			res.status(500).json({ message: "Error updating or  creating events", error: eventsError });
 		}
 		res.json(updatedParcelsData);
+	},
+
+	uploadExcelByHbl: async (req, res) => {
+		const filePath = req.file.path;
+		const readExcelFile = require("../utils/_readExcelByInvoiceId");
+		const excelData = await readExcelFile(filePath, schemas.excelSchemaByHBL);
+
+		//get sheet names
+		//for every sheet, get the data
+		//get the data from the sheet
+		const sheets = Object.keys(excelData);
+
+		const result = await Promise.all(
+			sheets.map(async (sheetNumber) => {
+				const sheetData = excelData[sheetNumber];
+
+				if (!sheetData)
+					return res.status(500).send("Error reading excel file no sheet data found.");
+				const { rows, errors, sheet } = sheetData;
+				//return { sheet, rows, errors };
+
+				const hbl_array = rows.map((pack) => pack.hbl);
+
+				const existingPackages = await mysql_db.packages.getByHblArray(hbl_array);
+
+				const createdParcelData = [];
+				existingPackages.forEach((pack) => {
+					const row = rows.find((row) => row.hbl === pack.hbl);
+
+					const { currentLocationId, updatedAt, events, statusId } = createEventFromExcelDataRow(
+						row,
+						pack.hbl,
+					);
+
+					if (currentLocationId > 1) {
+						createdParcelData.push({
+							...pack,
+							currentLocationId,
+							statusId,
+							updatedAt: updatedAt,
+							events,
+						});
+					}
+				});
+
+				const parcels = createdParcelData.map((parcel) => {
+					return {
+						hbl: parcel.hbl,
+						currentLocationId: parcel.currentLocationId,
+						statusId: parcel.statusId,
+						updatedAt: parcel.updatedAt,
+					};
+				});
+
+				const events = createdParcelData.flatMap((parcel) => parcel.events);
+
+				const { data: parcelsUpserted, error: parcelUpsertingErrors } =
+					await supabase_db.parcels.upsertParcels(parcels);
+				const { data: eventsUpserted, error: eventsUpsertingError } =
+					await supabase_db.parcelEvents.upsertParcelEvents(events);
+
+				return {
+					sheet,
+					updated: parcelsUpserted?.length,
+					events: eventsUpserted?.length,
+					errors: { errors, parcelUpsertingErrors, eventsUpsertingError },
+				};
+			}),
+		);
+		res.send(result);
+	},
+	uploadExcelByInvoiceId: async (req, res) => {
+		const filePath = req.file.path;
+		const readExcelFile = require("../utils/_readExcelByInvoiceId");
+		const excelData = await readExcelFile(filePath, schemas.excelSchemaByInvoiceId);
+
+		//get sheet names
+		//for every sheet, get the data
+		//get the data from the sheet
+		const sheets = Object.keys(excelData);
+
+		const result = await Promise.all(
+			sheets.map(async (sheetNumber) => {
+				const sheetData = excelData[sheetNumber];
+
+				if (!sheetData)
+					return res.status(500).send("Error reading excel file no sheet data found.");
+				const { rows, errors, sheet } = sheetData;
+				//return { sheet, rows, errors };
+
+				const uniqueInvoicesId = new Set(
+					rows.map((invoice) => invoice.invoiceId).filter((id) => id !== null && Number(id)),
+				);
+				const existingPackages = await mysql_db.packages.getByInvoices([...uniqueInvoicesId]);
+
+				const createdParcelData = [];
+				existingPackages.forEach((pack) => {
+					const row = rows.find((row) => row.invoiceId === pack.invoiceId);
+
+					const { currentLocationId, updatedAt, events, statusId } = createEventFromExcelDataRow(
+						row,
+						pack.hbl,
+					);
+
+					if (currentLocationId > 1) {
+						createdParcelData.push({
+							...pack,
+							currentLocationId,
+							statusId,
+							updatedAt: updatedAt,
+							events,
+						});
+					}
+				});
+				const parcels = createdParcelData.map((parcel) => {
+					return {
+						hbl: parcel.hbl,
+						currentLocationId: parcel.currentLocationId,
+						statusId: parcel.statusId,
+						updatedAt: parcel.updatedAt,
+					};
+				});
+
+				const events = createdParcelData.flatMap((parcel) => parcel.events);
+
+				const { data: parcelsUpserted, error: parcelUpsertingErrors } =
+					await supabase_db.parcels.upsertParcels(parcels);
+				const { data: eventsUpserted, error: eventsUpsertingError } =
+					await supabase_db.parcelEvents.upsertParcelEvents(events);
+
+				return {
+					sheet,
+					updated: parcelsUpserted?.length,
+					events: eventsUpserted?.length,
+					errors: { errors, parcelUpsertingErrors, eventsUpsertingError },
+				};
+			}),
+		);
+		res.send(result);
 	},
 };
 
