@@ -2,12 +2,12 @@
 	"name": "tracking-ctenvios-1.0.0",
 	"version": "1.0.0",
 	"description": "CTEnvios Tracking API",
-	"main": "index.js",
+	"main": "./src/index.js",
 	"author": "Yochiro Lee Cruz",
 	"license": "MIT",
 	"keywords": [],
 	"scripts": {
-		"dev": "nodemon index.js",
+		"dev": "nodemon ./src/index.js",
 		"postinstall": "prisma generate",
 		"build": "prisma generate && <actual-build-command>"
 	},
