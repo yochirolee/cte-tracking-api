@@ -15,11 +15,10 @@ app.use(compression());
 
 app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/", (req, res) => {
+app.use("/api/v1", authByApiKey, router_v1);
+app.all("*", (req, res) => {
 	res.sendFile(path.join(__dirname, "public", "index.html"));
 });
-
-app.use("/api/v1", authByApiKey, router_v1);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
