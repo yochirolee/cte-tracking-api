@@ -1,5 +1,4 @@
-const mysql_db = require("../Databases/MySql/mysql_db");
-const parcel_services = require("../Services/parcel_services");
+const mysql_db = require("../Databases/MySql/_mysql_db");
 
 const router = require("express").Router();
 

@@ -1,4 +1,4 @@
-const toCamelCase = require("./toCamelCase");
+const toCamelCase = require("./_toCamelCase");
 
 const formatedJoin = (parcels, packages) => {
 	// Create a Map for quick lookup by `hbl`

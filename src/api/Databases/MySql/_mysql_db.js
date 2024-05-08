@@ -221,7 +221,7 @@ const mysql_db = {
 		getContainers: async () => {
 			try {
 				const result = await query(
-					"select codigo as containerId, fecha as createdAt, numero as containerNumber, servicio as service, master, paquetes as packages,peso as weight from contenedores order by codigo DESC;",
+					"select codigo as containerId, fecha as createdAt, numero as containerNumber, servicio as service, master, paquetes as packages,peso as weight from contenedores order by codigo DESC limit 30;",
 				);
 				return result;
 			} catch (error) {

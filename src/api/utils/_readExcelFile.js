@@ -1,6 +1,7 @@
 const readXlsxFile = require("read-excel-file/node");
-const schemas = require("../schemas/schemas");
 const readExcelFile = async (filePath, schema) => {
+	if (!filePath) throw new Error("File path is required");
+	if (!schema) throw new Error("Schema is required");
 	const sheets = await readXlsxFile(filePath, { getSheets: true });
 
 	const readedData = await Promise.all(

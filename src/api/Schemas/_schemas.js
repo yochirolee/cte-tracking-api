@@ -7,7 +7,7 @@ const schemas = {
 		imageUrl: Joi.string().uri(),
 	}),
 	eventSchema: Joi.object({
-		trackingId: Joi.number().required(),
+		hbl: Joi.number().required(),
 		locationId: Joi.number().required(),
 		status: Joi.string().required(),
 		createdAt: Joi.date().required(),

@@ -1,11 +1,11 @@
-const mysql_db = require("../Databases/MySql/mysql_db");
-const prisma_db = require("../Databases/Prisma/prisma_db");
-const supabase_db = require("../Databases/Supabase/supabase_db");
-const createEvents = require("../utils/createEvents");
-const formatPackages = require("../utils/formatPackages");
-const { formatedJoin, formatSearchResult } = require("../utils/formatSearchResult");
+const mysql_db = require("../Databases/MySql/_mysql_db");
+const prisma_db = require("../Databases/Prisma/_prisma_db");
+const supabase_db = require("../Databases/Supabase/_supabase_db");
+const createEvents = require("../utils/_createEvents");
+const formatPackages = require("../utils/_formatPackages");
+const { formatedJoin, formatSearchResult } = require("../utils/_formatSearchResult");
 const createEventFromExcelDataRow = require("../utils/_createEventForExcelDataRow");
-const schemas = require("../Schemas/schemas");
+const schemas = require("../Schemas/_schemas");
 
 const parcels_controller = {
 	getByHbl: async (req, res) => {
@@ -38,7 +38,6 @@ const parcels_controller = {
 			packages.map((parcel) => parcel.hbl),
 		);
 		//group invoice by invoiceId
-		console.log(parcels.events);
 		const result = formatSearchResult(parcels, packages);
 		res.send(result);
 	},
@@ -133,7 +132,7 @@ const parcels_controller = {
 
 	uploadExcelByHbl: async (req, res) => {
 		const filePath = req.file.path;
-		const readExcelFile = require("../utils/_readExcelByInvoiceId");
+		const readExcelFile = require("../utils/_readExcelFile");
 		const excelData = await readExcelFile(filePath, schemas.excelSchemaByHBL);
 
 		//get sheet names
@@ -201,73 +200,78 @@ const parcels_controller = {
 		res.send(result);
 	},
 	uploadExcelByInvoiceId: async (req, res) => {
-		const filePath = req.file.path;
-		const readExcelFile = require("../utils/_readExcelByInvoiceId");
-		const excelData = await readExcelFile(filePath, schemas.excelSchemaByInvoiceId);
+		try {
+			const filePath = req.file.path;
+			const readExcelFile = require("../utils/_readExcelFile");
+			const excelData = await readExcelFile(filePath, schemas.excelSchemaByInvoiceId);
 
-		//get sheet names
-		//for every sheet, get the data
-		//get the data from the sheet
-		const sheets = Object.keys(excelData);
+			//get sheet names
+			//for every sheet, get the data
+			//get the data from the sheet
+			const sheets = Object.keys(excelData);
 
-		const result = await Promise.all(
-			sheets.map(async (sheetNumber) => {
-				const sheetData = excelData[sheetNumber];
+			const result = await Promise.all(
+				sheets.map(async (sheetNumber) => {
+					const sheetData = excelData[sheetNumber];
 
-				if (!sheetData)
-					return res.status(500).send("Error reading excel file no sheet data found.");
-				const { rows, errors, sheet } = sheetData;
-				//return { sheet, rows, errors };
+					if (!sheetData)
+						return res.status(500).send("Error reading excel file no sheet data found.");
+					const { rows, errors, sheet } = sheetData;
+					//return { sheet, rows, errors };
 
-				const uniqueInvoicesId = new Set(
-					rows.map((invoice) => invoice.invoiceId).filter((id) => id !== null && Number(id)),
-				);
-				const existingPackages = await mysql_db.packages.getByInvoices([...uniqueInvoicesId]);
-
-				const createdParcelData = [];
-				existingPackages.forEach((pack) => {
-					const row = rows.find((row) => row.invoiceId === pack.invoiceId);
-
-					const { currentLocationId, updatedAt, events, statusId } = createEventFromExcelDataRow(
-						row,
-						pack.hbl,
+					const uniqueInvoicesId = new Set(
+						rows.map((invoice) => invoice.invoiceId).filter((id) => id !== null && Number(id)),
 					);
+					const existingPackages = await mysql_db.packages.getByInvoices([...uniqueInvoicesId]);
 
-					if (currentLocationId > 1) {
-						createdParcelData.push({
-							...pack,
-							currentLocationId,
-							statusId,
-							updatedAt: updatedAt,
-							events,
-						});
-					}
-				});
-				const parcels = createdParcelData.map((parcel) => {
+					const createdParcelData = [];
+					existingPackages.forEach((pack) => {
+						const row = rows.find((row) => row.invoiceId === pack.invoiceId);
+
+						const { currentLocationId, updatedAt, events, statusId } = createEventFromExcelDataRow(
+							row,
+							pack.hbl,
+						);
+
+						if (currentLocationId > 1) {
+							createdParcelData.push({
+								...pack,
+								currentLocationId,
+								statusId,
+								updatedAt: updatedAt,
+								events,
+							});
+						}
+					});
+					const parcels = createdParcelData.map((parcel) => {
+						return {
+							hbl: parcel.hbl,
+							currentLocationId: parcel.currentLocationId,
+							statusId: parcel.statusId,
+							updatedAt: parcel.updatedAt,
+						};
+					});
+
+					const events = createdParcelData.flatMap((parcel) => parcel.events);
+
+					const { data: parcelsUpserted, error: parcelUpsertingErrors } =
+						await supabase_db.parcels.upsertParcels(parcels);
+					const { data: eventsUpserted, error: eventsUpsertingError } =
+						await supabase_db.parcelEvents.upsertParcelEvents(events);
+
 					return {
-						hbl: parcel.hbl,
-						currentLocationId: parcel.currentLocationId,
-						statusId: parcel.statusId,
-						updatedAt: parcel.updatedAt,
+						sheet,
+						updated: parcelsUpserted?.length,
+						events: eventsUpserted?.length,
+						errors: { errors, parcelUpsertingErrors, eventsUpsertingError },
 					};
-				});
-
-				const events = createdParcelData.flatMap((parcel) => parcel.events);
-
-				const { data: parcelsUpserted, error: parcelUpsertingErrors } =
-					await supabase_db.parcels.upsertParcels(parcels);
-				const { data: eventsUpserted, error: eventsUpsertingError } =
-					await supabase_db.parcelEvents.upsertParcelEvents(events);
-
-				return {
-					sheet,
-					updated: parcelsUpserted?.length,
-					events: eventsUpserted?.length,
-					errors: { errors, parcelUpsertingErrors, eventsUpsertingError },
-				};
-			}),
-		);
-		res.send(result);
+				}),
+			);
+			res.send(result);
+		} catch (err) {
+			console.log(err);
+			res.status(500).send(err);
+		}
 	},
 };
 

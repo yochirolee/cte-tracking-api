@@ -1,4 +1,4 @@
-const prisma_db = require("../Databases/Prisma/prisma_db");
+const prisma_db = require("../Databases/Prisma/_prisma_db");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const parcels_controller = require("../Controllers/parcels_controller");

@@ -24,7 +24,11 @@ const prisma_db = {
 					where: { hbl: hbl },
 					include: {
 						location: true,
-						events: true,
+						events: {
+							include: {
+								locations: true,
+							},
+						},
 					},
 				});
 				return parcel;
@@ -42,6 +46,7 @@ const prisma_db = {
 						events: true,
 					},
 				});
+
 				return parcels;
 			} catch (error) {
 				console.log(error);
@@ -96,7 +101,11 @@ const prisma_db = {
 					include: {
 						location: true,
 						status: true,
-						events: true,
+						events: {
+							include: {
+								locations: true,
+							},
+						},
 					},
 				});
 				return parcels;
@@ -106,7 +115,7 @@ const prisma_db = {
 			}
 		},
 
-		updateMany: async (parcels, currentLocationId, status) => {
+		/* 	updateMany: async (parcels, currentLocationId, status) => {
 			try {
 				const updatedParcels = await prisma.parcels.updateMany({
 					where: {
@@ -126,7 +135,7 @@ const prisma_db = {
 				console.log(error);
 				throw new Error(error);
 			}
-		},
+		}, */
 	},
 	events: {
 		get: async () => {

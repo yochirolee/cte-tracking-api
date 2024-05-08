@@ -15,7 +15,7 @@ const createEventFromExcelDataRow = (excelEvents, hbl) => {
 				});
 				currentLocationId = 5;
 				updatedAt = excelEvents[key];
-				statusId = 4;
+				statusId = 5;
 				break;
 			case "wharehouseDate":
 				events.push({
@@ -26,7 +26,7 @@ const createEventFromExcelDataRow = (excelEvents, hbl) => {
 				});
 				currentLocationId = 6;
 				updatedAt = excelEvents[key];
-				statusId = 5;
+				statusId = 6;
 				break;
 			case "trucksDate":
 				events.push({
@@ -37,7 +37,7 @@ const createEventFromExcelDataRow = (excelEvents, hbl) => {
 				});
 				currentLocationId = 7;
 				updatedAt = excelEvents[key];
-				statusId = 6;
+				statusId = 7;
 				break;
 			case "deliveredDate":
 				events.push({
@@ -48,7 +48,7 @@ const createEventFromExcelDataRow = (excelEvents, hbl) => {
 				});
 				currentLocationId = 8;
 				updatedAt = excelEvents[key];
-				statusId = 7;
+				statusId = 8;
 				break;
 			default:
 				break;
