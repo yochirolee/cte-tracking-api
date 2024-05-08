@@ -53,13 +53,13 @@ const createResultEvents = (package, parcel) => {
 		events.push({
 			locationId: 1,
 			location: "Facturado",
-			createdAt: package?.invoiceDate,
+			updatedAt: package?.invoiceDate,
 		});
 		if (package?.dispatchId) {
 			events.push({
 				location: "Despacho",
 				locationId: 2,
-				createdAt: package?.dispatchId,
+				updatedAt: package?.dispatchId,
 				dispatch: package?.dispatchId,
 			});
 		}
@@ -68,7 +68,7 @@ const createResultEvents = (package, parcel) => {
 			events.push({
 				location: "En Pallet",
 				locationId: 2,
-				createdAt: package?.palletDate,
+				updatedAt: package?.palletDate,
 				pallet: package?.palletId,
 			});
 		}
@@ -77,7 +77,7 @@ const createResultEvents = (package, parcel) => {
 			events.push({
 				location: "En Contenedor " + package?.containerName,
 				locationId: 3,
-				createdAt: package?.containerDate,
+				updatedAt: package?.containerDate,
 				container: package?.containerName,
 			});
 		}
