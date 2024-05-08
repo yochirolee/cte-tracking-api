@@ -145,7 +145,7 @@ const parcels_controller = {
 				const sheetData = excelData[sheetNumber];
 
 				if (!sheetData)
-					return res.status(500).send("Error reading excel file no sheet data found.");
+					return res.status(500).send(Error(`No data found for sheet: ${sheetNumber}`));
 				const { rows, errors, sheet } = sheetData;
 				//return { sheet, rows, errors };
 
@@ -154,6 +154,8 @@ const parcels_controller = {
 				const existingPackages = await mysql_db.packages.getByHblArray(hbl_array);
 
 				const createdParcelData = [];
+				
+
 				existingPackages.forEach((pack) => {
 					const row = rows.find((row) => row.hbl === pack.hbl);
 
@@ -184,16 +186,16 @@ const parcels_controller = {
 
 				const events = createdParcelData.flatMap((parcel) => parcel.events);
 
-				const { data: parcelsUpserted, error: parcelUpsertingErrors } =
-					await supabase_db.parcels.upsertParcels(parcels);
-				const { data: eventsUpserted, error: eventsUpsertingError } =
-					await supabase_db.parcelEvents.upsertParcelEvents(events);
+				const [parcelsUpserted, eventsUpserted] = await Promise.all([
+					supabase_db.parcels.upsertParcels(parcels),
+					supabase_db.parcelEvents.upsertParcelEvents(events),
+				]);
 
 				return {
 					sheet,
 					updated: parcelsUpserted?.length,
 					events: eventsUpserted?.length,
-					errors: { errors, parcelUpsertingErrors, eventsUpsertingError },
+					errors,
 				};
 			}),
 		);
