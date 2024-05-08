@@ -129,8 +129,81 @@ const parcels_controller = {
 		}
 		res.json(updatedParcelsData);
 	},
-
 	uploadExcelByHbl: async (req, res) => {
+		try {
+			const filePath = req.file.path;
+			const readExcelFile = require("../utils/_readExcelFile");
+			const excelData = await readExcelFile(filePath, schemas.excelSchemaByHBL);
+
+			const sheets = Object.keys(excelData);
+
+			const result = await Promise.all(
+				sheets.map(async (sheetNumber) => {
+					const sheetData = excelData[sheetNumber];
+					if (!sheetData) throw new Error(`No data found for sheet: ${sheetNumber}`);
+
+					const { rows, errors } = sheetData;
+					const hblArray = rows.map((pack) => pack.hbl);
+
+					// Get all packages in a single query
+					const existingPackages = await mysql_db.packages.getByHblArray(hblArray);
+
+					const createdParcelData = [];
+					const events = [];
+
+					// Process packages in memory
+					existingPackages.forEach((pack) => {
+						const row = rows.find((r) => r.hbl === pack.hbl);
+						if (!row) return;
+
+						const {
+							currentLocationId,
+							updatedAt,
+							events: newEvents,
+							statusId,
+						} = createEventFromExcelDataRow(row, pack.hbl);
+
+						if (currentLocationId > 1) {
+							createdParcelData.push({
+								...pack,
+								currentLocationId,
+								statusId,
+								updatedAt,
+								events: newEvents,
+							});
+							events.push(...newEvents);
+						}
+					});
+
+					const parcels = createdParcelData.map((parcel) => ({
+						hbl: parcel.hbl,
+						currentLocationId: parcel.currentLocationId,
+						statusId: parcel.statusId,
+						updatedAt: parcel.updatedAt,
+					}));
+
+					// Use batch upsert
+					const [parcelsUpserted, eventsUpserted] = await Promise.all([
+						supabase_db.parcels.upsertParcels(parcels),
+						supabase_db.parcelEvents.upsertParcelEvents(events),
+					]);
+
+					return {
+						sheet: sheetNumber,
+						parcels: parcelsUpserted?.data?.length,
+						events: eventsUpserted?.data?.length,
+						errors,
+					};
+				}),
+			);
+
+			res.send(result);
+		} catch (error) {
+			res.status(500).send(`Error: ${error.message}`);
+		}
+	},
+
+	/* uploadExcelByHbl: async (req, res) => {
 		const filePath = req.file.path;
 		const readExcelFile = require("../utils/_readExcelFile");
 		const excelData = await readExcelFile(filePath, schemas.excelSchemaByHBL);
@@ -154,7 +227,7 @@ const parcels_controller = {
 				const existingPackages = await mysql_db.packages.getByHblArray(hbl_array);
 
 				const createdParcelData = [];
-				
+
 
 				existingPackages.forEach((pack) => {
 					const row = rows.find((row) => row.hbl === pack.hbl);
@@ -200,7 +273,7 @@ const parcels_controller = {
 			}),
 		);
 		res.send(result);
-	},
+	}, */
 	uploadExcelByInvoiceId: async (req, res) => {
 		try {
 			const filePath = req.file.path;
