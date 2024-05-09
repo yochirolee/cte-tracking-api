@@ -7,7 +7,7 @@ const createEvents = (parcels, currentLocationId, updatedAt) => {
 			hbl: parcel.hbl,
 			hbloc: parcel.hbl + "-" + currentLocationId,
 			locationId: currentLocationId,
-			updatedAt: updatedAt ? updatedAt : new Date(),
+			updatedAt: updatedAt ,
 		};
 	});
 	return events;

@@ -28,6 +28,9 @@ const prisma_db = {
 							include: {
 								locations: true,
 							},
+							orderBy: {
+								locationId: "asc",
+							},
 						},
 					},
 				});

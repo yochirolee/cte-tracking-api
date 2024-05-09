@@ -79,7 +79,7 @@ const parcels_controller = {
 			return res.status(500).json({ message: "Error updating or creating packages", error });
 		}
 		//create Events from inserted packages
-		const events = createEvents(updatedPackages, currentLocationId);
+		const events = createEvents(updatedPackages, currentLocationId, updatedAt);
 
 		const { data: eventsData, error: eventsError } =
 			await supabase_db.parcelEvents.upsertParcelEvents(events);
