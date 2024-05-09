@@ -47,6 +47,9 @@ const prisma_db = {
 					include: {
 						location: true,
 						events: {
+							include: {
+								locations: true,
+							},
 							orderBy: {
 								locationId: "asc",
 							},
@@ -111,6 +114,9 @@ const prisma_db = {
 						events: {
 							include: {
 								locations: true,
+							},
+							orderBy: {
+								locationId: "asc",
 							},
 						},
 					},
