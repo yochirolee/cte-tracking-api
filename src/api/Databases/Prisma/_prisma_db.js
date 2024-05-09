@@ -46,7 +46,11 @@ const prisma_db = {
 					where: { invoiceId: Number(invoiceId) },
 					include: {
 						location: true,
-						events: true,
+						events: {
+							orderBy: {
+								locationId: "asc",
+							},
+						},
 					},
 				});
 
