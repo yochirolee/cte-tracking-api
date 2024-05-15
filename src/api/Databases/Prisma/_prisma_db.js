@@ -25,9 +25,19 @@ const prisma_db = {
 					include: {
 						events: {
 							include: {
-								locations: true,
+								locations: {
+									select: {
+										id: true,
+										name: true,
+									},
+								},
 								notes: true,
-								status: true,
+								status: {
+									select: {
+										id: true,
+										name: true,
+									},
+								},
 							},
 							orderBy: {
 								locationId: "asc",

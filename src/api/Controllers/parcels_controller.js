@@ -18,7 +18,7 @@ const parcels_controller = {
 			prisma_db.parcels.getByHbl(hbl),
 		]);
 		if (packages?.length === 0) return res.json(null);
-
+ console.log(parcels)
 		const result = formatSearchResult(parcels, packages);
 
 		res.send(result);

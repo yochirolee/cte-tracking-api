@@ -33,21 +33,23 @@ const formatedJoin = (parcels, packages) => {
 };
 const createResultEvents = (package, parcel) => {
 	if (!package) return [];
+	console.log(package);
 	const events = [];
 	if (package?.invoiceDate) {
 		events.push({
 			locationId: 1,
+			updatedAt: package?.invoiceDate,
 			locations: {
 				name: "Facturado",
-				updatedAt: package?.invoiceDate,
 			},
 		});
 		if (package?.dispatchId) {
 			events.push({
 				locationId: 2,
+				updatedAt: package?.dispatchId,
 				locations: {
 					name: "Despacho",
-					updatedAt: package?.dispatchId,
+
 					dispatch: package?.dispatchId,
 				},
 			});
@@ -56,9 +58,10 @@ const createResultEvents = (package, parcel) => {
 		if (package?.palletDate) {
 			events.push({
 				locationId: 2,
+				updatedAt: package?.palletDate,
 				locations: {
 					name: "En Pallet",
-					updatedAt: package?.palletDate,
+					palletId: package?.palletId,
 				},
 			});
 		}
@@ -66,9 +69,9 @@ const createResultEvents = (package, parcel) => {
 		if (package?.containerDate) {
 			events.push({
 				locationId: 3,
+				updatedAt: package?.containerDate,
 				locations: {
 					name: "En Contenedor " + package?.containerName,
-					updatedAt: package?.containerDate,
 					container: package?.containerName,
 				},
 			});
