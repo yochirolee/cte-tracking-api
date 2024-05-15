@@ -1,10 +1,9 @@
-const formatPackages = (packages, currentLocationId, statusId, updatedAt) => {
+const formatPackages = (packages) => {
 	const formmatedPackages = packages.map((package) => {
 		return {
 			hbl: package.hbl,
-			currentLocationId: currentLocationId,
-			statusId: statusId,
-			updatedAt: updatedAt ? updatedAt : new Date(),
+			containerId: package.containerId,
+			invoiceId: package.invoiceId,
 		};
 	});
 	return formmatedPackages;

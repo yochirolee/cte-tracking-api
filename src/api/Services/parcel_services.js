@@ -36,10 +36,7 @@ const parcel_services = {
 	},
 	parcels: {
 		toPort: async (containerId, updatedAt) => {
-			const container = await mysql_db.container.getContainerById(containerId);
-			if (!container) {
-				throw new Error("Container not found");
-			}
+			
 			const packages = await mysql_db.container.getPackagesByContainerId(containerId);
 			if (packages.length === 0) {
 				return { message: "No packages found for this container" };

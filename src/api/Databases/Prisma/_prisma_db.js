@@ -23,10 +23,11 @@ const prisma_db = {
 				const parcel = await prisma.parcels.findMany({
 					where: { hbl: hbl },
 					include: {
-						location: true,
 						events: {
 							include: {
 								locations: true,
+								notes: true,
+								status: true,
 							},
 							orderBy: {
 								locationId: "asc",
@@ -45,10 +46,10 @@ const prisma_db = {
 				const parcels = await prisma.parcels.findMany({
 					where: { invoiceId: Number(invoiceId) },
 					include: {
-						location: true,
 						events: {
 							include: {
 								locations: true,
+								status: true,
 							},
 							orderBy: {
 								locationId: "asc",
@@ -71,8 +72,15 @@ const prisma_db = {
 						containerId: Number(containerId),
 					},
 					include: {
-						location: true,
-						events: true,
+						events: {
+							include: {
+								locations: true,
+								status: true,
+							},
+							orderBy: {
+								locationId: "asc",
+							},
+						},
 					},
 				});
 				return parcels;
@@ -109,8 +117,6 @@ const prisma_db = {
 						},
 					},
 					include: {
-						location: true,
-						status: true,
 						events: {
 							include: {
 								locations: true,
@@ -127,37 +133,36 @@ const prisma_db = {
 				throw new Error(error);
 			}
 		},
-
-		/* 	updateMany: async (parcels, currentLocationId, status) => {
+		update: async (hbl, data) => {
 			try {
-				const updatedParcels = await prisma.parcels.updateMany({
-					where: {
-						hbl: {
-							in: parcels.map((parcel) => parcel.hbl),
-						},
-					},
-					data: {
-						status: status,
-						currentLocation: currentLocationId,
-						updatedAt: new Date(),
-					},
+				const parcels = await prisma.parcels.update({
+					where: { hbl: hbl },
+					data: data,
 				});
-				console.log(updatedParcels, "updated parcels");
-				return updatedParcels;
+				return parcels;
 			} catch (error) {
 				console.log(error);
 				throw new Error(error);
 			}
-		}, */
+		},
 	},
 	events: {
-		get: async () => {
+		getByHBL: async (hbl) => {
 			try {
-				const events = await prisma.events.findMany({
-					orderBy: {
-						createdAt: "desc",
+				const events = await prisma.parcels.findFirst({
+					where: { hbl: hbl },
+					select: {
+						hbl: true,
+						events: {
+							include: {
+								locations: true,
+								notes: true,
+							},
+							orderBy: {
+								locationId: "asc",
+							},
+						},
 					},
-					take: 100,
 				});
 				return events;
 			} catch (error) {
@@ -176,6 +181,66 @@ const prisma_db = {
 			} catch (error) {
 				console.log(error);
 				throw new Error(error);
+			}
+		},
+	},
+	locations: {
+		get: async () => {
+			try {
+				const locations = await prisma.locations.findMany({
+					orderBy: {
+						updatedAt: "desc",
+					},
+					///greater than 4
+					where: {
+						id: {
+							gt: 3,
+						},
+					},
+				});
+				return locations;
+			} catch (error) {
+				console.log(error);
+				throw new Error(error);
+			}
+		},
+	},
+	status: {
+		get: async () => {
+			try {
+				const allStatus = await prisma.status.findMany({
+					orderBy: {
+						updatedAt: "desc",
+					},
+				});
+				return allStatus;
+			} catch (error) {
+				console.log(error);
+				throw new Error(error);
+			}
+		},
+	},
+	notes: {
+		create: async (data) => {
+			try {
+				const note = await prisma.notes.create({
+					data: data,
+				});
+
+				return note;
+			} catch (error) {
+				console.log(error);
+				throw new Error(error);
+			}
+		},
+		delete: async (id) => {
+			try {
+				const note = await prisma.notes.delete({
+					where: { id: Number(id) },
+				});
+				return note;
+			} catch (error) {
+				console.log(error);
 			}
 		},
 	},

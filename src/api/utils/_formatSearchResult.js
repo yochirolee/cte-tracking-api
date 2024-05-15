@@ -2,83 +2,75 @@ const toCamelCase = require("./_toCamelCase");
 
 const formatedJoin = (parcels, packages) => {
 	// Create a Map for quick lookup by `hbl`
-	const parcelMap = new Map(parcels.map((parcel) => [parcel.hbl, parcel]));
-
-	const unionByHbl = packages.map((package) => {
-		const parcel = parcelMap.get(package.hbl);
-
-		const basePackage = {
-			invoiceId: package.invoiceId,
-			description: toCamelCase(package.description),
-			sender: toCamelCase(package.sender),
-			receiver: toCamelCase(package.receiver),
-			weight: package.weight,
-			province: package.province,
-			city: package.city,
-			receiverPhone: package.receiverPhone,
-			senderPhone: package.senderPhone,
+	const unionByHbl = packages.map((pack) => {
+		const parcel = parcels.find((parcel) => pack.hbl === parcel.hbl);
+		return {
+			invoiceId: pack.invoiceId,
+			hbl: pack.hbl,
+			sender: toCamelCase(pack.sender),
+			receiver: toCamelCase(pack.receiver),
+			description: toCamelCase(pack.description),
+			weight: pack.weight,
+			province: pack.province,
+			agency: toCamelCase(pack.agency),
+			city: pack.city,
+			receiverPhone: pack.receiverPhone,
+			senderPhone: pack.senderPhone,
 			shippingAddress:
-				toCamelCase(
-					package?.cll + " " + package?.entre_cll + " " + package.no + " " + package?.apto,
-				) +
+				toCamelCase(pack?.cll + " " + pack?.entre_cll + " " + pack.no + " " + pack?.apto) +
 				" " +
-				package?.reparto,
-		};
+				pack?.reparto,
+			currentLocationId: parcel?.events[parcel?.events?.length - 1]?.locationId
+				? parcel?.events[parcel?.events.length - 1]?.locationId
+				: 3,
+			events: parcel?.events ? parcel.events : createResultEvents(pack, parcel),
 
-		if (parcel) {
-			// If parcel exists, merge it with the additional properties from the package
-			return {
-				...parcel,
-				...basePackage, // Merge the common properties
-			};
-		} else {
-			// If parcel does not exist, create a new one with default properties
-			return {
-				hbl: package.hbl,
-				invoiceId: package.invoiceId,
-				containerId: package.containerId,
-				statusId: 3,
-				status: "En Contenedor",
-				location: "En Contenedor",
-				currentLocationId: 3,
-				...basePackage, // Merge the common properties
-			};
-		}
+			//max locationId
+		};
 	});
+
 	return unionByHbl;
 };
 const createResultEvents = (package, parcel) => {
+	if (!package) return [];
 	const events = [];
 	if (package?.invoiceDate) {
 		events.push({
 			locationId: 1,
-			location: "Facturado",
-			updatedAt: package?.invoiceDate,
+			locations: {
+				name: "Facturado",
+				updatedAt: package?.invoiceDate,
+			},
 		});
 		if (package?.dispatchId) {
 			events.push({
-				location: "Despacho",
 				locationId: 2,
-				updatedAt: package?.dispatchId,
-				dispatch: package?.dispatchId,
+				locations: {
+					name: "Despacho",
+					updatedAt: package?.dispatchId,
+					dispatch: package?.dispatchId,
+				},
 			});
 		}
 
 		if (package?.palletDate) {
 			events.push({
-				location: "En Pallet",
 				locationId: 2,
-				updatedAt: package?.palletDate,
-				pallet: package?.palletId,
+				locations: {
+					name: "En Pallet",
+					updatedAt: package?.palletDate,
+				},
 			});
 		}
 
 		if (package?.containerDate) {
 			events.push({
-				location: "En Contenedor " + package?.containerName,
 				locationId: 3,
-				updatedAt: package?.containerDate,
-				container: package?.containerName,
+				locations: {
+					name: "En Contenedor " + package?.containerName,
+					updatedAt: package?.containerDate,
+					container: package?.containerName,
+				},
 			});
 		}
 
@@ -93,6 +85,7 @@ const formatSearchResult = (parcels, packages) => {
 		invoiceId: packages[0].invoiceId,
 		customer: {
 			fullName: toCamelCase(packages[0].sender),
+			mobile: packages[0].senderMobile,
 		},
 		receiver: {
 			fullName: toCamelCase(packages[0].receiver),

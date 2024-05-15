@@ -1,61 +1,58 @@
-const createEventFromExcelDataRow = (excelEvents, hbl) => {
+const createEventFromExcelDataRow = (excelEvents, package) => {
 	const events = [];
-	let currentLocationId = 1;
-	let updatedAt = null;
-	let statusId = 1;
 
 	for (const key in excelEvents) {
 		switch (key) {
 			case "customsDate":
 				events.push({
-					hbl: hbl,
+					hbl: package.hbl,
 					updatedAt: excelEvents[key],
 					locationId: 5,
-					hbloc: `${hbl}-5`,
+					statusId: 2,
+					hbloc: `${package.hbl}-5`,
 				});
-				currentLocationId = 5;
+
 				updatedAt = excelEvents[key];
-				statusId = 5;
+
 				break;
 			case "wharehouseDate":
 				events.push({
-					hbl: hbl,
+					hbl: package.hbl,
 					updatedAt: excelEvents[key],
 					locationId: 6,
-					hbloc: `${hbl}-6`,
+					hbloc: `${package.hbl}-6`,
+					statusId: 2,
 				});
-				currentLocationId = 6;
+
 				updatedAt = excelEvents[key];
-				statusId = 6;
+
 				break;
 			case "trucksDate":
 				events.push({
-					hbl: hbl,
+					hbl: package.hbl,
 					updatedAt: excelEvents[key],
 					locationId: 7,
-					hbloc: `${hbl}-7`,
+					statusId: 3,
+					hbloc: `${package.hbl}-7`,
 				});
-				currentLocationId = 7;
 				updatedAt = excelEvents[key];
-				statusId = 7;
 				break;
 			case "deliveredDate":
 				events.push({
-					hbl: hbl,
+					hbl: package.hbl,
 					updatedAt: excelEvents[key],
 					locationId: 8,
-					hbloc: `${hbl}-8`,
+					hbloc: `${package.hbl}-8`,
+					statusId: 8,
 				});
-				currentLocationId = 8;
 				updatedAt = excelEvents[key];
-				statusId = 8;
 				break;
 			default:
 				break;
 		}
 	}
 
-	return { events, currentLocationId, updatedAt, statusId };
+	return events;
 };
 
 module.exports = createEventFromExcelDataRow;

@@ -16,43 +16,65 @@ datasource db {
 
 model Parcels {
   hbl             String         @id @unique
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  status          Status        @relation(fields: [statusId], references: [id])
-  statusId        Int @default(1)
-  location        Locations      @relation(fields: [currentLocationId], references: [id])
-  currentLocationId Int
+  containerId     Int ?
+  invoiceId       Int 
   events          Events[]
-  @@index([hbl,currentLocationId])
+  isDelivered     Boolean @default(false)
+  isSenderNotified Boolean @default(false)
+  hasProblem   Boolean @default(false)
  
 }
 
+
 model Events {
-  id         Int @id @default(autoincrement())
-  hbloc       String @unique
-  createdAt   DateTime   @default(now())
+  hbloc       String @id @unique
   updatedAt   DateTime   @updatedAt
   parcel      Parcels     @relation(fields: [hbl], references: [hbl], onDelete: Cascade, onUpdate: Cascade)
   hbl  String
   locations   Locations? @relation(fields: [locationId], references: [id])
   locationId Int?
+  status      Status? @relation(fields: [statusId], references: [id])
+  statusId    Int?
+   notes Notes[]
   
 }
 
+model Notes {
+  id Int @id @default(autoincrement())
+  hbloc String
+  event Events @relation(fields: [hbloc], references: [hbloc], onDelete: Cascade, onUpdate: Cascade)
+  comment String
+  updatedAt DateTime @default(now())  
+  createdBy String?
+  imageUrl String?
+}
+
+
+
+
+
 model Status {
   id        Int      @id @default(autoincrement())
-  status    String
+  name    String
   description String
-  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  parcels   Parcels[]
+  events   Events[]
 }
 
 model Locations {
   id        Int            @id @default(autoincrement())
   name  String
-  createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
-  parcels   Parcels[]
   events    Events[]
+}
+
+
+
+
+
+enum UpdateMethod {
+  SCAN
+  EXCEL_FILE
+  MANUAL
+
 }

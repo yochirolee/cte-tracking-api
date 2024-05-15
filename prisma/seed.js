@@ -8,42 +8,46 @@ const locations = [
 	{ name: "En Contenedor" },
 	{ name: "En Puerto del Mariel" },
 	{ name: "Aduana Cuba" },
-	{ name: "Almacen Cuba" },
+	{ name: "Almacen Mypimes" },
 	{ name: "En Traslado" },
-	{ name: "Destino Final" },
+	{ name: "Entregado" },
 ];
 
 const status = [
 	{
-		status: "Facturado",
+		name: "Facturado",
 		description: "En agencia de origen",
 	},
 	{
-		status: "En Espera",
+		name: "En Espera",
 		description: "En agencia de origen",
 	},
 	{
-		status: "En Transito",
+		name: "En Transito",
 		description: "Su paquete esta en camino",
 	},
 	{
-		status: "En Canal Rojo",
+		name: "En Canal Rojo",
 		description: "Su paquete esta en canal rojo",
 	},
 	{
-		status: "Roto",
+		name: "En Proceso",
+		description: "Su paquete esta siendo procesado",
+	},
+	{
+		name: "Roto",
 		description: "Su paquete esta roto",
 	},
 	{
-		status: "Mojado",
+		name: "Mojado",
 		description: "Su paquete esta mojado",
 	},
 	{
-		status: "Perdido",
+		name: "Perdido",
 		description: "Su paquete esta perdido",
 	},
 	{
-		status: "Entregado",
+		name: "Entregado",
 		description: "Su paquete esta entregado",
 	},
 ];

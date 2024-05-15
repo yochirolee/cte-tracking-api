@@ -88,7 +88,9 @@ const mysql_db = {
 
 		getByHblArray: async (hbl_array) => {
 			if (!hbl_array || hbl_array.length === 0) return [];
-			return await query("SELECT HBL  FROM `parcels` where HBL IN (?) ;", [hbl_array]);
+			return await query("select hbl,invoiceId,containerId  FROM `parcels` where HBL IN (?) ;", [
+				hbl_array,
+			]);
 		},
 
 		getByInvoiceId: async (invoiceId) => {
@@ -102,10 +104,34 @@ const mysql_db = {
 				return packagesFound;
 			} catch (error) {
 				console.log(error);
+				throw error;
+			}
+		},
+		getPackagesByContainerId: async (containerId) => {
+			try {
+				const packagesFound = await query(
+					"select hbl,containerId, invoiceId from parcels where ContainerId=?",
+					[containerId],
+				);
+				if (packagesFound?.length === 0) return [];
+				return packagesFound;
+			} catch (error) {
+				console.log(error);
+			}
+		},
+		getPackagesDetailsByContainerId: async (containerId) => {
+			try {
+				const packagesFound = await query("select * from parcels where ContainerId=?", [
+					containerId,
+				]);
+				if (packagesFound?.length === 0) return [];
+				return packagesFound;
+			} catch (error) {
+				console.log(error);
 			}
 		},
 
-		getPackagesByContainerId: async (containerId) => {
+		/* 	getPackagesByContainerId: async (containerId) => {
 			try {
 				const packagesFound = await query(
 					"select * from view_reports_by_container where ContainerId=?",
@@ -116,7 +142,7 @@ const mysql_db = {
 			} catch (error) {
 				console.log(error);
 			}
-		},
+		}, */
 
 		getPackagesByHblList: async (array_of_hbls) => {
 			if (!array_of_hbls || array_of_hbls.length === 0) return [];
@@ -227,14 +253,6 @@ const mysql_db = {
 			} catch (error) {
 				console.log(error);
 				throw error;
-			}
-		},
-		getPackagesByContainerId: async (id) => {
-			try {
-				const result = await query("select * from parcels where containerId=?", [id]);
-				return result;
-			} catch (error) {
-				console.log(error);
 			}
 		},
 	},

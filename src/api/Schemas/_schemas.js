@@ -2,9 +2,10 @@ const Joi = require("joi");
 
 const schemas = {
 	noteSchema: Joi.object({
-		eventId: Joi.number().required(),
-		note: Joi.string().required().min(1).max(255),
+		hbloc: Joi.string().required(),
+		comment: Joi.string().required().min(1).max(255),
 		imageUrl: Joi.string().uri(),
+		
 	}),
 	eventSchema: Joi.object({
 		hbl: Joi.number().required(),

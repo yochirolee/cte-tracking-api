@@ -2,7 +2,6 @@ const mysql_db = require("../Databases/MySql/_mysql_db");
 const prisma_db = require("../Databases/Prisma/_prisma_db");
 const supabase_db = require("../Databases/Supabase/_supabase_db");
 const createEvents = require("../utils/_createEvents");
-const formatPackages = require("../utils/_formatPackages");
 const { formatedJoin, formatSearchResult } = require("../utils/_formatSearchResult");
 const createEventFromExcelDataRow = require("../utils/_createEventForExcelDataRow");
 const schemas = require("../Schemas/_schemas");
@@ -18,7 +17,7 @@ const parcels_controller = {
 			mysql_db.packages.getPackageByHBL(hbl),
 			prisma_db.parcels.getByHbl(hbl),
 		]);
-		if (!packages?.length) return res.status(404).json({ message: "Parcel not found" });
+		if (packages?.length === 0) return res.json(null);
 
 		const result = formatSearchResult(parcels, packages);
 
@@ -34,9 +33,9 @@ const parcels_controller = {
 		}
 
 		const packages = await mysql_db.packages.getByInvoiceId(invoiceId);
-		const parcels = await prisma_db.parcels.getByHblListWithEvents(
-			packages.map((parcel) => parcel.hbl),
-		);
+		if (packages.length === 0) return res.json(null);
+
+		const parcels = await prisma_db.parcels.getByInvoiceId(invoiceId);
 		//group invoice by invoiceId
 		const result = formatSearchResult(parcels, packages);
 		res.send(result);
@@ -47,55 +46,54 @@ const parcels_controller = {
 		if (!containerId) {
 			return res.status(400).json({ message: "container Id is required" });
 		}
-		const packages = await mysql_db.container.getPackagesByContainerId(containerId);
 
-		if (!packages) return res.status(404).json({ message: "No packages found for this container" });
+		const [packages, parcels] = await Promise.all([
+			mysql_db.packages.getPackagesDetailsByContainerId(containerId),
+			prisma_db.parcels.getByContainerId(containerId),
+		]);
 
-		const hbl_list = packages.map((parcel) => parcel.hbl);
-
-		const parcels = await prisma_db.parcels.getByHblList(hbl_list);
-		const unionByHbl = formatedJoin(parcels, packages);
-
-		const containerData = {
+		const formatedParcels = formatedJoin(parcels, packages);
+		res.send({
 			inPort: !!parcels?.length > 0,
-			data: unionByHbl,
-		};
-		res.send(containerData);
+			length: parcels.length,
+			data: formatedParcels,
+		});
 	},
-	moveParcelsToPort: async (req, res) => {
-		const { containerId, updatedAt } = req.body;
+	moveParcelsByContainerId: async (req, res) => {
+		const { containerId, updatedAt, locationId, statusId } = req.body;
+		if (!containerId || !updatedAt || !locationId || !statusId) {
+			return res
+				.status(400)
+				.json({ message: "containerId, updatedAt and locationId are required" });
+		}
 		if (!containerId) {
 			return res.status(400).json({ message: "container Id is required" });
 		}
-		const packages = await mysql_db.container.getPackagesByContainerId(containerId);
+		const packages = await mysql_db.packages.getPackagesByContainerId(containerId);
 		if (packages.length === 0) {
 			return res.status(301).json({ message: "No packages found for this container" });
 		}
-		const currentLocationId = 4;
-		const statusId = 1;
-		const updatedPackages = formatPackages(packages, currentLocationId, statusId, updatedAt);
-		const { data, error } = await supabase_db.parcels.upsertParcels(updatedPackages);
+
+		const { data: parcels, error } = await supabase_db.parcels.upsertParcels(packages);
 		if (error) {
 			return res.status(500).json({ message: "Error updating or creating packages", error });
 		}
-		//create Events from inserted packages
-		const events = createEvents(updatedPackages, currentLocationId, updatedAt);
 
-		const { data: eventsData, error: eventsError } =
-			await supabase_db.parcelEvents.upsertParcelEvents(events);
+		//create Events from inserted packages
+		const events = createEvents(parcels, locationId, statusId, updatedAt);
+
+		const { error: eventsError } = await supabase_db.parcelEvents.upsertParcelEvents(events);
 		if (eventsError) {
 			return res
 				.status(500)
 				.json({ message: "Error updating or  creating events", error: eventsError });
 		}
-		res.send(data);
+		res.send(parcels);
 	},
-	changeLocation: async (req, res) => {
-		const { hbl_array, currentLocationId, statusId, updatedAt } = req.body;
-		if (!hbl_array || !currentLocationId || !statusId) {
-			return res
-				.status(400)
-				.json({ message: "arrayOfHbls, currentLocationId and statusId are required" });
+	moveParcelByHblArray: async (req, res) => {
+		const { hbl_array, locationId, statusId, updatedAt } = req.body;
+		if (!hbl_array || !locationId || !statusId) {
+			return res.status(400).json({ message: "arrayOfHbls, locationId and statusId are required" });
 		}
 
 		const { data: parcels, error } = await supabase_db.parcels.getParcelByArrayOfHbls(hbl_array);
@@ -109,7 +107,7 @@ const parcels_controller = {
 		const updatedParcels = parcels.map((parcel) => {
 			return {
 				...parcel,
-				currentLocationId: currentLocationId,
+				locationId: locationId,
 				statusId: statusId,
 				updatedAt: updatedAt ? updatedAt : new Date(),
 			};
@@ -146,50 +144,21 @@ const parcels_controller = {
 					const hblArray = rows.map((pack) => pack.hbl);
 
 					// Get all packages in a single query
-					const existingPackages = await mysql_db.packages.getByHblArray(hblArray);
-
-					const createdParcelData = [];
-					const events = [];
-
-					// Process packages in memory
-					existingPackages.forEach((pack) => {
-						const row = rows.find((r) => r.hbl === pack.hbl);
-						if (!row) return;
-
-						const {
-							currentLocationId,
-							updatedAt,
-							events: newEvents,
-							statusId,
-						} = createEventFromExcelDataRow(row, pack.hbl);
-
-						if (currentLocationId > 1) {
-							createdParcelData.push({
-								...pack,
-								currentLocationId,
-								statusId,
-								updatedAt,
-								events: newEvents,
-							});
-							events.push(...newEvents);
-						}
+					const parcels = await mysql_db.packages.getByHblArray(hblArray);
+					const events = parcels.flatMap((parcel) => {
+						const row = rows.find((r) => r.hbl === parcel.hbl);
+						if (!row) return [];
+						const events = createEventFromExcelDataRow(row, parcel);
+						return events;
 					});
 
-					const parcels = createdParcelData.map((parcel) => ({
-						hbl: parcel.hbl,
-						currentLocationId: parcel.currentLocationId,
-						statusId: parcel.statusId,
-						updatedAt: parcel.updatedAt,
-					}));
-
-					// Use batch upsert
 					const [parcelsUpserted, eventsUpserted] = await Promise.all([
 						supabase_db.parcels.upsertParcels(parcels),
 						supabase_db.parcelEvents.upsertParcelEvents(events),
 					]);
 
 					return {
-						sheet: sheetNumber,
+						sheet: sheetData.sheet,
 						parcels: parcelsUpserted?.data?.length,
 						events: eventsUpserted?.data?.length,
 						errors,
