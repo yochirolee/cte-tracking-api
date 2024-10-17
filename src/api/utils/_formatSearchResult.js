@@ -43,17 +43,7 @@ const createResultEvents = (package, parcel) => {
 				name: "Facturado",
 			},
 		});
-		if (package?.dispatchDate) {
-			events.push({
-				locationId: 2,
-				updatedAt: package?.dispatchDate,
-				locations: {
-					name: "Despacho",
-
-					dispatch: package?.dispatchId,
-				},
-			});
-		}
+		
 
 		if (package?.palletDate) {
 			events.push({
