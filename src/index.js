@@ -16,6 +16,7 @@ app.use(compression());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api/v1", authByApiKey, router_v1);
+
 app.all("*", (req, res) => {
 	res.sendFile(path.join(__dirname, "public", "index.html"));
 });

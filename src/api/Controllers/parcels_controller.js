@@ -2,7 +2,11 @@ const mysql_db = require("../Databases/MySql/_mysql_db");
 const prisma_db = require("../Databases/Prisma/_prisma_db");
 const supabase_db = require("../Databases/Supabase/_supabase_db");
 const createEvents = require("../utils/_createEvents");
-const { formatedJoin, formatSearchResult } = require("../utils/_formatSearchResult");
+const {
+	formatedJoin,
+	formatSearchResult,
+	littleFormatSearchResult,
+} = require("../utils/_formatSearchResult");
 const createEventFromExcelDataRow = require("../utils/_createEventForExcelDataRow");
 const schemas = require("../Schemas/_schemas");
 
@@ -18,8 +22,7 @@ const parcels_controller = {
 			prisma_db.parcels.getByHbl(hbl),
 		]);
 		if (packages?.length === 0) return res.json(null);
- console.log(parcels)
-		const result = formatSearchResult(parcels, packages);
+		const result = littleFormatSearchResult(parcels, packages);
 
 		res.send(result);
 	},
@@ -37,8 +40,8 @@ const parcels_controller = {
 
 		const parcels = await prisma_db.parcels.getByInvoiceId(invoiceId);
 		//group invoice by invoiceId
-		const result = formatSearchResult(parcels, packages);
-		res.send(result);
+		const result = littleFormatSearchResult(parcels, packages);
+		res.send(result || []);
 	},
 
 	getParcelsByContainerId: async (req, res) => {

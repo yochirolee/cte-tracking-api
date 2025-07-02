@@ -39,20 +39,14 @@ const createResultEvents = (package, parcel) => {
 		events.push({
 			locationId: 1,
 			updatedAt: package?.invoiceDate,
-			locations: {
-				name: "Facturado",
-			},
+			location: "Facturado en Agencia",
 		});
-		
 
 		if (package?.palletDate) {
 			events.push({
 				locationId: 2,
 				updatedAt: package?.palletDate,
-				locations: {
-					name: "En Pallet",
-					palletId: package?.palletId,
-				},
+				location: "En Pallet " + package?.palletId,
 			});
 		}
 
@@ -60,14 +54,16 @@ const createResultEvents = (package, parcel) => {
 			events.push({
 				locationId: 3,
 				updatedAt: package?.containerDate,
-				locations: {
-					name: "En Contenedor " + package?.containerName,
-					container: package?.containerName,
-				},
+				location: "En Contenedor " + package?.containerName,
 			});
 		}
 
-		if (parcel?.events?.length > 0) events.push(...parcel.events);
+		if (parcel?.events?.length > 0)
+			events.push({
+				locationId: parcel?.events[parcel?.events?.length - 1]?.locationId,
+				updatedAt: parcel?.events[parcel?.events?.length - 1]?.updatedAt,
+				location: parcel?.events[parcel?.events?.length - 1]?.locations?.name,
+			});
 	}
 	return events;
 };
@@ -117,5 +113,30 @@ const formatSearchResult = (parcels, packages) => {
 
 	return formatedResult;
 };
+const littleFormatSearchResult = (parcels, packages) => {
+	// Create a Map for quick lookup by `hbl`
 
-module.exports = { formatedJoin, formatSearchResult };
+	const formatedResult = {
+		invoiceId: packages[0].invoiceId,
+		agency: toCamelCase(packages[0].agency),
+		province: packages[0].province,
+		city: packages[0].city,
+
+		parcels: packages.map((package) => {
+			const parcelMap = new Map(parcels.map((parcel) => [parcel.hbl, parcel]));
+			const parcel = parcelMap.get(package.hbl);
+
+			return {
+				hbl: package.hbl,
+				weight: package.weight,
+				description: toCamelCase(package.description),
+				location: parcel ? parcel?.location?.name : "En Contenedor",
+				events: createResultEvents(package, parcel),
+			};
+		}),
+	};
+
+	return formatedResult;
+};
+
+module.exports = { formatedJoin, formatSearchResult, littleFormatSearchResult };

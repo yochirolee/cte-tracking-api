@@ -55,11 +55,18 @@ const prisma_db = {
 			try {
 				const parcels = await prisma.parcels.findMany({
 					where: { invoiceId: Number(invoiceId) },
-					include: {
+					select: {
+						hbl: true,
+						invoiceId: true,
 						events: {
-							include: {
-								locations: true,
-								status: true,
+							select: {
+								locationId: true,
+								updatedAt: true,
+								locations: {
+									select: {
+										name: true,
+									},
+								},
 							},
 							orderBy: {
 								locationId: "asc",

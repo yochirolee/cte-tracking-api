@@ -94,7 +94,10 @@ const mysql_db = {
 		},
 
 		getByInvoiceId: async (invoiceId) => {
-			const packages = await query("select * from parcels where InvoiceId=?", [invoiceId]);
+			const packages = await query(
+				"select hbl, invoiceId,description,city,province,weight,invoiceDate,currentLocation,containerDate,containerId,agency, containerName,palletId,palletDate from parcels where InvoiceId=?",
+				[invoiceId],
+			);
 			return packages;
 		},
 		getPackageByHBL: async (hbl) => {
