@@ -6,9 +6,6 @@ const prisma_db = {
 		get: async () => {
 			try {
 				const parcels = await prisma.parcels.findMany({
-					orderBy: {
-						createdAt: "desc",
-					},
 					take: 100,
 				});
 				return parcels;

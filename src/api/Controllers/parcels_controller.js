@@ -39,6 +39,7 @@ const parcels_controller = {
 		if (packages.length === 0) return res.json(null);
 
 		const parcels = await prisma_db.parcels.getByInvoiceId(invoiceId);
+		console.log(parcels);
 		//group invoice by invoiceId
 		const result = littleFormatSearchResult(parcels, packages);
 		res.send(result || []);
@@ -55,7 +56,7 @@ const parcels_controller = {
 			prisma_db.parcels.getByContainerId(containerId),
 		]);
 
-		const formatedParcels = formatedJoin(parcels, packages);
+		const formatedParcels = formatedJoin(packages,parcels);
 		res.send({
 			inPort: !!parcels?.length > 0,
 			length: parcels.length,

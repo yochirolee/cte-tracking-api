@@ -14,6 +14,7 @@ const formatedJoin = (parcels, packages) => {
 			province: pack.province,
 			agency: toCamelCase(pack.agency),
 			city: pack.city,
+
 			receiverPhone: pack.receiverPhone,
 			senderPhone: pack.senderPhone,
 			shippingAddress:
@@ -33,7 +34,6 @@ const formatedJoin = (parcels, packages) => {
 };
 const createResultEvents = (package, parcel) => {
 	if (!package) return [];
-	console.log(package);
 	const events = [];
 	if (package?.invoiceDate) {
 		events.push({
@@ -58,12 +58,15 @@ const createResultEvents = (package, parcel) => {
 			});
 		}
 
-		if (parcel?.events?.length > 0)
-			events.push({
-				locationId: parcel?.events[parcel?.events?.length - 1]?.locationId,
-				updatedAt: parcel?.events[parcel?.events?.length - 1]?.updatedAt,
-				location: parcel?.events[parcel?.events?.length - 1]?.locations?.name,
+		if (parcel?.events?.length > 0) {
+			parcel.events.map((event) => {
+				events.push({
+					locationId: event.locationId,
+					updatedAt: event.updatedAt,
+					location: event.locations?.name,
+				});
 			});
+		}
 	}
 	return events;
 };
