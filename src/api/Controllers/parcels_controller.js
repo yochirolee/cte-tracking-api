@@ -56,7 +56,7 @@ const parcels_controller = {
 			prisma_db.parcels.getByContainerId(containerId),
 		]);
 
-		const formatedParcels = formatedJoin(packages,parcels);
+		const formatedParcels = formatedJoin(parcels, packages);
 		res.send({
 			inPort: !!parcels?.length > 0,
 			length: parcels.length,

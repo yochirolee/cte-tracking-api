@@ -4,6 +4,7 @@ const formatedJoin = (parcels, packages) => {
 	// Create a Map for quick lookup by `hbl`
 	const unionByHbl = packages.map((pack) => {
 		const parcel = parcels.find((parcel) => pack.hbl === parcel.hbl);
+
 		return {
 			invoiceId: pack.invoiceId,
 			hbl: pack.hbl,
@@ -21,9 +22,8 @@ const formatedJoin = (parcels, packages) => {
 				toCamelCase(pack?.cll + " " + pack?.entre_cll + " " + pack.no + " " + pack?.apto) +
 				" " +
 				pack?.reparto,
-			currentLocationId: parcel?.events[parcel?.events?.length - 1]?.locationId
-				? parcel?.events[parcel?.events.length - 1]?.locationId
-				: 3,
+			currentLocationId:
+				parcel?.events?.length > 0 ? parcel?.events[parcel?.events?.length - 1]?.locationId : 3,
 			events: parcel?.events ? parcel.events : createResultEvents(pack, parcel),
 
 			//max locationId
